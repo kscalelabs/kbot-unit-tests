@@ -56,3 +56,9 @@ ks robots urdf mujoco kbot-v1
 | ------ | ---------- | --------- | ------------------------------------------ |
 | 🚧     | ❌         | `test_00` | kos-sim matching real robot test          |
 | 🚧     | ❌         | `test_01` | play recorded actions test                |
+
+
+## Assets 
+| Name | Description | Date Added | PR Link | Video Link |
+| recording_00 | Isaac Gym stable policy with old urdf | 2025m02d15 | |  |
+| recording_01 | Manual velocity scale | 2025m02d16 | https://photos.app.goo.gl/ZMFP185dwuCtf3ex5 |
