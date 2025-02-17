@@ -1,5 +1,3 @@
-"""Interactive example script for a command to keep the robot balanced."""
-
 import argparse
 import asyncio
 import logging
@@ -56,7 +54,9 @@ async def configure_robot(kos: KOS) -> None:
             kp = actuator.kp,
             kd = actuator.kd,
             max_torque = actuator.max_torque,
+            torque_enabled = True
         )
+
 
 async def main() -> None:
     parser = argparse.ArgumentParser()
@@ -118,7 +118,7 @@ async def main() -> None:
         else:
             print("Running on both simulator and real robots simultaneously...")
             async with KOS(ip=args.host, port=args.port) as sim_kos, \
-                       KOS(ip="10.33.11.170", port=args.port) as real_kos:
+                       KOS(ip="100.89.14.31", port=args.port) as real_kos:
                 await sim_kos.sim.reset()
                 await configure_robot(sim_kos)
                 await configure_robot(real_kos)
@@ -167,15 +167,15 @@ async def main() -> None:
                             sim_kos.actuator.command_actuators(command),
                             real_kos.actuator.command_actuators(command),
                         )
+                        
                         await asyncio.sleep(2)
-
 
     except Exception as e:
         print(f"Error: {e}")
+
     finally:
         sim_process.terminate()
         sim_process.wait()
-
 
 
 if __name__ == "__main__":
