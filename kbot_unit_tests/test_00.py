@@ -69,50 +69,91 @@ async def main() -> None:
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=50051)
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--sim-only", action="store_true",
+                        help="Run simulation only without connecting to the real robot")
     args = parser.parse_args()
 
     colorlogging.configure(level=logging.DEBUG if args.debug else logging.INFO)
-    # await test_client(host=args.host, port=args.port)
+
+    # Start the simulation process (this remains unchanged)
     sim_process = subprocess.Popen(["kos-sim", "kbot-v1", "--no-gravity"])
     time.sleep(2)
     try:
-        print("Running on both simulator and real robots simultaneously...")
-        async with KOS(ip="localhost", port=50051) as sim_kos, KOS(ip="10.33.11.170", port=50051) as real_kos:
-            await sim_kos.sim.reset()
+        if args.sim:
+            print("Running in simulation-only mode...")
+            async with KOS(ip=args.host, port=args.port) as sim_kos:
+                await sim_kos.sim.reset()
+                await configure_robot(sim_kos, False)
+                print("Homing...")
+                homing_command = [{
+                    "actuator_id": actuator.actuator_id,
+                    "position": 0.0
+                } for actuator in ACTUATOR_LIST]
+                await sim_kos.actuator.command_actuators(homing_command)
+                await asyncio.sleep(2)
 
-            sim_kos = await configure_robot(sim_kos, False)
-            real_kos = await configure_robot(real_kos, True)
+                for actuator in ACTUATOR_LIST:
+                    print(f"Testing {actuator.actuator_id} in simulation...")
+                    test_angle = -15.0
+                    command = [{
+                        "actuator_id": actuator.actuator_id,
+                        "position": test_angle,
+                    }]
+                    await sim_kos.actuator.command_actuators(command)
 
-        print("Homing...")
-        homing_command = [{"actuator_id": actuator.actuator_id, "position": 0.0} for actuator in ACTUATOR_LIST]
-        await asyncio.gather(
-            sim_kos.actuator.command_actuators(homing_command),
-            real_kos.actuator.command_actuators(homing_command),
-        )
+                    await asyncio.sleep(2)
 
-        await asyncio.sleep(2)
 
-        for actuator in ACTUATOR_LIST:
-            print(f"Teesting {actuator.actuator_id}...")
-            test_angle = -45.0
+                    command = [{
+                        "actuator_id": actuator.actuator_id,
+                        "position": 0.0,
+                    }]
+                    await sim_kos.actuator.command_actuators(command)
 
-            real_command = {
-                "actuator_id": actuator.actuator_id,
-                "position": test_angle,
-            }
 
-            sim_command = {
-                "actuator_id": actuator.actuator_id,
-                "position": test_angle,
-            }
+                    await asyncio.sleep(2)
+        else:
+            print("Running on both simulator and real robots simultaneously...")
+            async with KOS(ip=args.host, port=args.port) as sim_kos, \
+                       KOS(ip="10.33.11.170", port=args.port) as real_kos:
+                await sim_kos.sim.reset()
+                await configure_robot(sim_kos, False)
+                await configure_robot(real_kos, True)
+                print("Homing...")
+                homing_command = [{
+                    "actuator_id": actuator.actuator_id,
+                    "position": 0.0
+                } for actuator in ACTUATOR_LIST]
+                await asyncio.gather(
+                    sim_kos.actuator.command_actuators(homing_command),
+                    real_kos.actuator.command_actuators(homing_command),
+                )
+                await asyncio.sleep(2)
 
-            await asyncio.gather(
-                sim_kos.actuator.command_actuator(sim_command),
-                real_kos.actuator.command_actuator(real_command),
-            )
+                for actuator in ACTUATOR_LIST:
+                    print(f"Testing {actuator.actuator_id}...")
+                    test_angle = -45.0
+                    command = {
+                        "actuator_id": actuator.actuator_id,
+                        "position": test_angle,
+                    }
+                    await asyncio.gather(
+                        sim_kos.actuator.command_actuators(command),
+                        real_kos.actuator.command_actuators(command),
+                    )
 
-            await asyncio.sleep(2)
+                    await asyncio.sleep(2)  
 
+                    command = [{
+                        "actuator_id": actuator.actuator_id,
+                        "position": 0.0,
+                    }]
+                    await asyncio.gather(
+                        sim_kos.actuator.command_actuators(command),
+                        real_kos.actuator.command_actuators(command),
+                    )
+
+                    await asyncio.sleep(2)
     except Exception as e:
         print(f"Error: {e}")
     finally:
