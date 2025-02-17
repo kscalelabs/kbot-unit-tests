@@ -8,12 +8,10 @@ import time
 from dataclasses import dataclass
 
 import colorlogging
-import numpy as np
 from pykos import KOS
 from scipy.spatial.transform import Rotation as R
 
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class Actuator:
@@ -61,7 +59,6 @@ async def configure_robot(kos: KOS) -> None:
         )
 
 async def main() -> None:
-    """Runs the main simulation loop."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=50051)
@@ -136,30 +133,43 @@ async def main() -> None:
                 )
                 await asyncio.sleep(2)
 
-                for actuator in ACTUATOR_LIST:
-                    print(f"Testing {actuator.actuator_id}...")
-                    TEST_ANGLE = -45.0
-                    command = [{
-                        "actuator_id": actuator.actuator_id,
-                        "position": TEST_ANGLE,
-                    }]
-                    await asyncio.gather(
-                        sim_kos.actuator.command_actuators(command),
-                        real_kos.actuator.command_actuators(command),
-                    )
 
-                    await asyncio.sleep(2)  
+                order = [11, 21, 12, 22, 13, 23, 14, 24, 15, 25, 31, 41, 32, 42, 33, 43, 34, 44, 35, 45]
 
-                    command = [{
-                        "actuator_id": actuator.actuator_id,
-                        "position": 0.0,
-                    }]
-                    await asyncio.gather(
-                        sim_kos.actuator.command_actuators(command),
-                        real_kos.actuator.command_actuators(command),
-                    )
+                actuator_map = {actuator.actuator_id: actuator for actuator in ACTUATOR_LIST}
 
-                    await asyncio.sleep(2)
+                for actuator_id in order:
+                        actuator = actuator_map.get(actuator_id)
+                        print(f"Testing {actuator.actuator_id} in simulation...")
+
+                        TEST_ANGLE = -10.0
+
+                        FLIP_SIGN = 1.0 if actuator.actuator_id in [12, 21, 13, 14, 15, 25, 32, 33, 35, 41, 44] else -1.0
+                        TEST_ANGLE *= FLIP_SIGN
+
+                        command = [{
+                            "actuator_id": actuator.actuator_id,
+                            "position": TEST_ANGLE,
+                        }]
+                        print(f"Sending command to actuator {actuator.actuator_id}: position {TEST_ANGLE}")
+
+                        await asyncio.gather(
+                            sim_kos.actuator.command_actuators(command),
+                            real_kos.actuator.command_actuators(command),
+                        )
+                        await asyncio.sleep(2)
+
+                        command = [{
+                            "actuator_id": actuator.actuator_id,
+                            "position": 0.0,
+                        }]
+                        await asyncio.gather(
+                            sim_kos.actuator.command_actuators(command),
+                            real_kos.actuator.command_actuators(command),
+                        )
+                        await asyncio.sleep(2)
+
+
     except Exception as e:
         print(f"Error: {e}")
     finally:
