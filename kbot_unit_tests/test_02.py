@@ -29,16 +29,19 @@ ACTUATOR_LIST: list[Actuator] = [
     Actuator(13, 9, 50.0, 5.0, 17.0),  # left_shoulder_yaw_02
     Actuator(14, 13, 50.0, 5.0, 17.0),  # left_elbow_02
     Actuator(15, 17, 20.0, 2.0, 17.0),  # left_wrist_02
+
     Actuator(21, 3, 150.0, 8.0, 60.0),  # right_shoulder_pitch_03
     Actuator(22, 7, 150.0, 8.0, 60.0),  # right_shoulder_roll_03
     Actuator(23, 11, 50.0, 5.0, 17.0),  # right_shoulder_yaw_02
     Actuator(24, 15, 50.0, 5.0, 17.0),  # right_elbow_02
     Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
+
     Actuator(31, 0, 250.0, 30.0, 120.0),  # left_hip_pitch_04
     Actuator(32, 4, 150.0, 8.0, 60.0),  # left_hip_roll_03
     Actuator(33, 8, 150.0, 8.0, 60.0),  # left_hip_yaw_03
     Actuator(34, 12, 200.0, 8.0, 120.0),  # left_knee_04
     Actuator(35, 16, 80.0, 10.0, 17.0),  # left_ankle_02
+    
     Actuator(41, 2, 250.0, 30.0, 120.0),  # right_hip_pitch_04
     Actuator(42, 6, 150.0, 8.0, 60.0),  # right_hip_roll_03
     Actuator(43, 10, 150.0, 8.0, 60.0),  # right_hip_yaw_03

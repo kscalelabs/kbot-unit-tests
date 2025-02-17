@@ -32,10 +32,16 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-5. Run the tests
-
+4. Start `kos-sim` server backend in a separate terminal:
 ```bash
-make test
+kos-sim kbot-v1 --no-render # disable render of MuJoCo
+```
+
+5. Run the tests in another terminal:
+
+Example:
+```bash
+python kbot_unit_tests/test_01.py
 ```
 
 ### Additional Tests
