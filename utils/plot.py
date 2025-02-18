@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-kp = 80.0
-kd = 2.0
 
 # Read the JSON files
 with open('sim_actuator_states.json', 'r') as f:
@@ -16,13 +14,22 @@ with open('real_actuator_states.json', 'r') as f:
 sim_df = pd.DataFrame(sim_data)
 real_df = pd.DataFrame(real_data)
 
-# Get unique actuator IDs (assuming they match between sim and real)
+# Get unique actuator IDs
 actuator_ids = sim_df['actuator_id'].unique()
+
+# Create a dictionary to store kp and kd for each actuator
+control_params = {}
+for actuator_id in actuator_ids:
+    actuator_data = sim_df[sim_df['actuator_id'] == actuator_id].iloc[0]
+    control_params[actuator_id] = {
+        'kp': actuator_data['kp'],
+        'kd': actuator_data['kd']
+    }
 
 # Create figure with subplots for each actuator, side by side for sim and real
 num_actuators = len(actuator_ids)
 fig, axes = plt.subplots(num_actuators, 2, figsize=(20, 4*num_actuators))
-fig.suptitle(f'Commanded vs Actual Position Over Time by Actuator (kp={kp}, kd={kd})')
+fig.suptitle(f'Commanded vs Actual Position Over Time for Actuator {actuator_ids[0]} (kp={control_params[actuator_ids[0]]["kp"]}, kd={control_params[actuator_ids[0]]["kd"]})')
 
 # If there's only one actuator, wrap axes in a 2D array
 if num_actuators == 1:

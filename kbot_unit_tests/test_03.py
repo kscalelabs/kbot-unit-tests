@@ -34,6 +34,8 @@ class StateLog:
     velocity: float
     commanded_position: float
     commanded_velocity: float
+    kp: float
+    kd: float
 
 
 class TestData:
@@ -41,15 +43,16 @@ class TestData:
         self.states: List[StateLog] = []
     
     def log_state(self, time: float, actuator_id: int, position: float, velocity: float, 
-                 commanded_position: float, commanded_velocity: float):
+                 commanded_position: float, commanded_velocity: float, kp: float, kd: float):
         self.states.append(StateLog(time, actuator_id, position, velocity, 
-                                  commanded_position, commanded_velocity))
+                                  commanded_position, commanded_velocity, kp, kd))
     
     def save_to_json(self, filename: str):
         data = [{"time": s.time, "actuator_id": s.actuator_id, 
                  "position": s.position, "velocity": s.velocity,
                  "commanded_position": s.commanded_position,
-                 "commanded_velocity": s.commanded_velocity}
+                 "commanded_velocity": s.commanded_velocity,
+                 "kp": s.kp, "kd": s.kd}
                 for s in self.states]
         with open(filename, "w") as f:
             json.dump(data, f, indent=2)
@@ -72,15 +75,15 @@ ACTUATOR_LIST: list[Actuator] = [
     Actuator(33, 8, 30.0, 2.0, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
     Actuator(34, 12, 60.0, 2.0, 80.0),  # left_knee_04 (RS04_Knee)
     Actuator(35, 16, 80.0, 1.0, 17.0),  # left_ankle_02 (RS02)
-    Actuator(41, 2, 85.0, 3.0, 80.0),  # right_hip_pitch_04 (RS04_Pitch)
-    Actuator(42, 6, 85.0, 2.0, 60.0),  # right_hip_roll_03 (RS03_Roll)
-    Actuator(43, 10, 30.0, 2.0, 60.0),  # right_hip_yaw_03 (RS03_Yaw)
-    Actuator(44, 14, 100.0, 7.0, 80.0),  # right_knee_04 (RS04_Knee)
-    Actuator(45, 18, 80.0, 1.0, 17.0),  # right_ankle_02 (RS02)
+    Actuator(41, 2, 100, 7.0, 80.0),  # right_hip_pitch_04 (RS04_Pitch) #* DONE
+    Actuator(42, 6, 50.0, 7.0, 60.0),  # right_hip_roll_03 (RS03_Roll)
+    Actuator(43, 10, 50.0, 2.0, 60.0),  # right_hip_yaw_03 (RS03_Yaw)
+    Actuator(44, 14, 100.0, 7.0, 80.0),  # right_knee_04 (RS04_Knee) #* DONE
+    Actuator(45, 18, 20.0, 1.0, 17.0),  # right_ankle_02 (RS02)
 ]
 
 # Define the actuators we want to move
-ACTUATORS_TO_MOVE = [44]  # left/right hip roll and left/right ankle
+ACTUATORS_TO_MOVE = [42]  # left/right hip roll and left/right ankle
 
 async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     logger.info("Starting test client...")
@@ -91,8 +94,8 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
 
     # Test parameters
     amplitude = 10.0   # degrees (half of peak-to-peak)
-    offset = -25.0  # degrees (center point between -10 and -20)
-    frequency = 4  # Hz
+    offset = 10.0  # degrees (center point between -10 and -20)
+    frequency = 1  # Hz
     duration = 10.0   # seconds
     
     # Reset the simulation
@@ -162,13 +165,16 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
 
         # Log states separately for sim and real
         for state in states_list[0].states:
+            # Find the corresponding actuator to get kp and kd
+            actuator = next(a for a in ACTUATOR_LIST if a.actuator_id == state.actuator_id)
             sim_data.log_state(t, state.actuator_id, state.position, state.velocity,
-                             position, velocity)
+                             position, velocity, actuator.kp, actuator.kd)
         
         if real_kos and len(states_list) > 1:
             for state in states_list[1].states:
+                actuator = next(a for a in ACTUATOR_LIST if a.actuator_id == state.actuator_id)
                 real_data.log_state(t, state.actuator_id, state.position, state.velocity,
-                                  position, velocity)
+                                  position, velocity, actuator.kp, actuator.kd)
 
         if next_time > current_time:
             await asyncio.sleep(next_time - current_time)
