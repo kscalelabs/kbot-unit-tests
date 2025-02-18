@@ -1,5 +1,45 @@
 """Logging script for testing armature."""
 #! MAKE SURE BOTH ARE OFF IN THE SAME WAY IN KOS SIM AND REAL
+""" REQUIRED ADJUSTMENTS:
+Alter the MJCF to contain the following after </worldbody>:
+    <equality>
+            <weld body1="body1-part" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="leg0_shell" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="leg0_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="leg1_shell" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="leg1_shell3" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="leg2_shell" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="leg2_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="shoulder" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="shoulder_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="arm1_top" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="arm1_top_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="arm2_shell" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="arm2_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="arm3_shell" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/> 
+            <weld body1="hand_shell" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="hand_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="hand_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="hand_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="hand_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="hand_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+            <weld body1="hand_shell_2" body2="world" solimp="0.9 0.95 0.001" solref="0.02 1"/>
+    </equality>
+
+    ALTER the mjcf so that leg3 and foot3 to have very small mass and diag inertia (won't let you enter 0, get as close as possible)
+
+    ALTER the mjcf so that leg3 and foot3 and adjacent (leg2, leg1) HAVE NO COLLISION
+
+    ALTER the mjcf so that the motor being used has no joint limit
+
+    CHECK the mjcf to see what the 'actual' friction and armature values are.
+
+ALTER the kos-sim definition to have mujoco-scene be empty (rather than "smooth") 
+
+MAKE SURE that you run it --no-gravity
+"""
+
+
 
 import argparse
 import asyncio
@@ -102,15 +142,19 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     real_data = TestData() if real_kos else None
 
     # Test parameters
-    step_time_duration = 2.0     # seconds
-    step_time_delay = 2.0   # seconds
-    duration = 8.0   # seconds
-    step_current = 8.0 # Amps
+    torque_direction = 1 
+    step_current = 0.03 # Amps
+
+    step_time_duration = .5    # seconds
+    step_time_delay = 1.0   # seconds
+    step_time_shutoff = 14 # seconds
+    duration = step_time_delay + step_time_duration + step_time_shutoff   # seconds
     Km_RS04 = 2.1 # Nm/Ampere_rms https://github.com/RobStride/Product_Information/blob/main/Product%20Literature/RS04/RS04_instruction_manual_En_241217.pdf
 
     
     # Reset the simulation
-    await sim_kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 1.0] + [0.0] * 20})
+    await sim_kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 0.0] + [0.0] * 20})
+
 
     # First disable all motors
     logger.info("Disabling motors...")
@@ -128,6 +172,9 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         config_commands.append(sim_kos.actuator.configure_actuator(
             actuator_id=actuator.actuator_id,
             torque_enabled=True,
+            kp=0.0,#actuator.kp,
+            kd=0.0,#actuator.kd,
+            max_torque=actuator.max_torque,
         ))
         if real_kos:
             config_commands.append(real_kos.actuator.configure_actuator(
@@ -153,7 +200,7 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         if t > step_time_delay + step_time_duration:
             torque = 0.0
         elif t > step_time_delay:
-            torque = step_current * Km_RS04
+            torque = step_current * Km_RS04 * torque_direction
 
         # Calculate sine wave position with offset
         #angular_freq = 2 * np.pi * frequency
