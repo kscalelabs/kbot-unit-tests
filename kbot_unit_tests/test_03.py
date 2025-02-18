@@ -70,20 +70,20 @@ ACTUATOR_LIST: list[Actuator] = [
     Actuator(23, 11, 50.0, 5.0, 17.0),  # right_shoulder_yaw_02
     Actuator(24, 15, 50.0, 5.0, 17.0),  # right_elbow_02
     Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
-    Actuator(31, 0, 85.0, 3.0, 80.0),  # left_hip_pitch_04 (RS04_Pitch)
-    Actuator(32, 4, 85.0, 2.0, 60.0),  # left_hip_roll_03 (RS03_Roll)
-    Actuator(33, 8, 30.0, 2.0, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
-    Actuator(34, 12, 60.0, 2.0, 80.0),  # left_knee_04 (RS04_Knee)
-    Actuator(35, 16, 80.0, 1.0, 17.0),  # left_ankle_02 (RS02)
+    Actuator(31, 0, 100.0, 6.1504, 80.0),  # left_hip_pitch_04 (RS04_Pitch)
+    Actuator(32, 4, 50.0, 11.152, 60.0),  # left_hip_roll_03 (RS03_Roll) #* DONE
+    Actuator(33, 8, 50.0, 11.152, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
+    Actuator(34, 12, 100.0, 6.1504, 80.0),  # left_knee_04 (RS04_Knee)
+    Actuator(35, 16, 20.0, 0.6, 17.0),  # left_ankle_02 (RS02)
     Actuator(41, 2, 100, 7.0, 80.0),  # right_hip_pitch_04 (RS04_Pitch) #* DONE
-    Actuator(42, 6, 50.0, 7.0, 60.0),  # right_hip_roll_03 (RS03_Roll)
-    Actuator(43, 10, 50.0, 2.0, 60.0),  # right_hip_yaw_03 (RS03_Yaw)
-    Actuator(44, 14, 100.0, 7.0, 80.0),  # right_knee_04 (RS04_Knee) #* DONE
-    Actuator(45, 18, 20.0, 1.0, 17.0),  # right_ankle_02 (RS02)
+    Actuator(42, 6, 50.0, 11.152, 60.0),  # right_hip_roll_03 (RS03_Roll)
+    Actuator(43, 10, 50.0, 11.152, 60.0),  # right_hip_yaw_03 (RS03_Yaw)
+    Actuator(44, 14, 100.0, 6.1504, 80.0),  # right_knee_04 (RS04_Knee) #* DONE
+    Actuator(45, 18, 20.0, 0.6, 17.0),  # right_ankle_02 (RS02)
 ]
 
 # Define the actuators we want to move
-ACTUATORS_TO_MOVE = [42]  # left/right hip roll and left/right ankle
+ACTUATORS_TO_MOVE = [45]  # left/right hip roll and left/right ankle
 
 async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     logger.info("Starting test client...")
@@ -93,9 +93,9 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     real_data = TestData() if real_kos else None
 
     # Test parameters
-    amplitude = 10.0   # degrees (half of peak-to-peak)
-    offset = 10.0  # degrees (center point between -10 and -20)
-    frequency = 1  # Hz
+    amplitude = 20.0   # degrees (half of peak-to-peak)
+    offset = 0.0 # degrees
+    frequency = 4  # Hz
     duration = 10.0   # seconds
     
     # Reset the simulation
@@ -116,6 +116,8 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         config_commands = []
         config_commands.append(sim_kos.actuator.configure_actuator(
             actuator_id=actuator.actuator_id,
+            kp=actuator.kp,
+            kd=actuator.kd,
             torque_enabled=True,
         ))
         if real_kos:

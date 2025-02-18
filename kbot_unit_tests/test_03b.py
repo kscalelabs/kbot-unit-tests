@@ -71,7 +71,7 @@ ACTUATOR_LIST: list[Actuator] = [
     Actuator(24, 15, 50.0, 5.0, 17.0),  # right_elbow_02
     Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
     Actuator(31, 0, 85.0, 3.0, 80.0),  # left_hip_pitch_04 (RS04_Pitch)
-    Actuator(32, 4, 5.0, 0.0, 60.0),  # left_hip_roll_03 (RS03_Roll)
+    Actuator(32, 4, 80.0, 4.0, 60.0),  # left_hip_roll_03 (RS03_Roll)
     Actuator(33, 8, 30.0, 2.0, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
     Actuator(34, 12, 60.0, 2.0, 80.0),  # left_knee_04 (RS04_Knee)
     Actuator(35, 16, 80.0, 1.0, 17.0),  # left_ankle_02 (RS02)
@@ -93,8 +93,8 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     real_data = TestData() if real_kos else None
 
     # Test parameters
-    amplitude = 5.0    # degrees (peak-to-peak)
-    offset = 0.0      # degrees (center point)
+    amplitude = 10.0    # degrees (peak-to-peak)
+    offset = -5.0      # degrees (center point)
     frequency = 0.5   # Hz
     duration = 10.0   # seconds
     
@@ -141,7 +141,7 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         # Calculate square wave position
         period = 1.0 / frequency
         cycle_position = (t % period) / period
-        position = amplitude if cycle_position < 0.5 else 0.0
+        position = offset + (amplitude if cycle_position < 0.5 else 0.0)
         velocity = 0.0
 
         # Filter actuator list to only include actuators we want to move
