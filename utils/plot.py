@@ -2,14 +2,15 @@ import json
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
-
+cur_dir = Path(__file__).parent
 
 # Read the JSON files
-with open('sim_actuator_states.json', 'r') as f:
+with open(cur_dir / 'sim_actuator_states.json', 'r') as f:
     sim_data = json.load(f)
 try:
-    with open('real_actuator_states.json', 'r') as f:
+    with open(cur_dir / 'real_actuator_states.json', 'r') as f:
         real_data = json.load(f)
     has_real_data = True
 except FileNotFoundError:

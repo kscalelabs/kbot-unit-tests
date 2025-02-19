@@ -83,7 +83,7 @@ ACTUATOR_LIST: list[Actuator] = [
 ]
 
 # Define the actuators we want to move
-ACTUATORS_TO_MOVE = [45]  # left/right hip roll and left/right ankle
+ACTUATORS_TO_MOVE = [44]  # left/right hip roll and left/right ankle
 
 async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     logger.info("Starting test client...")
@@ -93,11 +93,11 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     real_data = TestData() if real_kos else None
 
     # Test parameters
-    amplitude = 20.0   # degrees (half of peak-to-peak)
-    offset = 0.0 # degrees
-    frequency = 4  # Hz
-    duration = 10.0   # seconds
-    
+    amplitude = 30.0   # degrees (half of peak-to-peak)
+    offset = -30.0 # degrees
+    frequency = 2  # Hz
+    duration = 5.0   # seconds
+
     # Reset the simulation
     await sim_kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 1.0] + [0.0] * 20})
 
@@ -138,10 +138,22 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         t = current_time - start_time
         
         # Calculate sine wave position with offset
-        angular_freq = 2 * np.pi * frequency
-        position = offset + amplitude * np.sin(angular_freq * t)
+        # angular_freq = 2 * np.pi * frequency
+        # position = offset + amplitude * np.sin(angular_freq * t)
         # velocity = amplitude * angular_freq * np.cos(angular_freq * t)
-        velocity = 0.0
+        # # velocity = 0.0
+
+        # Calculate square wave position with offset.
+        # position = offset + amplitude * np.sign(np.sin(2 * np.pi * frequency * t))
+        # velocity = 0.0
+
+        # Calculate sawtooth wave position with offset.
+        # position = offset + amplitude * (t % (1 / frequency))
+        # velocity = amplitude * np.sign(np.sin(2 * np.pi * frequency * t))
+
+        # Calculate triangle wave position with offset.
+        position = offset + amplitude * (t % (1 / frequency)) * np.sign(np.sin(2 * np.pi * frequency * t))
+        velocity = amplitude * np.sign(np.sin(2 * np.pi * frequency * t))
 
         # Filter actuator list to only include actuators we want to move
         active_actuators = [actuator for actuator in ACTUATOR_LIST if actuator.actuator_id in ACTUATORS_TO_MOVE]
