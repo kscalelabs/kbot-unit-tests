@@ -148,11 +148,29 @@ async def test_client(host: str = "localhost", port: int = 50051) -> None:
     async with KOS(ip=host, port=port) as kos:
         # Start the robot lying down with zeroed joints, but slightly higher
         init_xyz = [0.0, 0.0, 0.3]  # Increased height to reduce ground friction
-        init_quat = list(R.from_euler("xyz", [0.0, 90.0, 0.0], degrees=True).as_quat())
+        init_quat = list(R.from_euler("xyz", [-90.0, -90.0, 0.0], degrees=True).as_quat())
         init_joints = [0.0] * len(ACTUATOR_LIST)
-
+        # breakpoint()
         # Reset the simulation.
-        await kos.sim.reset(initial_state={"qpos": init_xyz + init_quat + init_joints})
+        # await kos.sim.resegit(
+        #     initial_state={
+        #         "qpos": init_xyz + init_quat + init_joints,
+        #         "qvel": [0.0] * len(ACTUATOR_LIST),
+        #     }
+        # )
+
+        await kos.sim.reset(
+            pos={"x": 0.0, "y": 0.0, "z": 0.8},
+            quat={"x": 0, "y": 0.70710678, "z": 0.0, "w": 0.70710678},
+            # joints=[
+            #     {
+            #         "name": actuator.joint_name,
+            #         "pos": 0.0,
+            #     }
+            #     for actuator in ACTUATOR_LIST
+            # ],
+        )
+
 
         # Configure all actuators with higher gains for legs
         for actuator in ACTUATOR_LIST:
