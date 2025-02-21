@@ -14,6 +14,7 @@ import onnx
 import onnxruntime as ort
 import pykos
 # from kinfer.inference.python import ONNXModel
+from kos_protos import imu_pb2, actuator_pb2
 from typing import Any
 from pykos import KOS
 from scipy.spatial.transform import Rotation as R
@@ -96,6 +97,130 @@ ACTUATOR_ID_TO_POLICY_IDX = {
     45: 19,  # right_ankle_02
 }
 
+MOCK_ACTUATORS_STATE_RESPONSE = actuator_pb2.GetActuatorsStateResponse(states=[
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=11,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=12,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=13,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=14,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=15,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=21,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=22,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=23,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=24,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=25,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=31,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=32,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=33,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=34,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=35,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=41,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=42,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=43,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=44,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                ),
+                actuator_pb2.ActuatorStateResponse(
+                    actuator_id=45,
+                    online=True,
+                    position=-1.8632490473236272,
+                    velocity=-2.2405764310774727
+                )
+            ])
+
+MOCK_IMU_QUATERNION_RESPONSE = imu_pb2.QuaternionResponse(x=0.0, y=0.0, z=0.0, w=0.0)
 
 def map_isaac_to_mujoco(isaac_to_mujoco_mapping, isaac_position) -> np.ndarray:
     """Maps joint positions from Isaac format to MuJoCo format.
@@ -133,18 +258,20 @@ async def simple_walking(
     policy: Any,
     default_position: list[float], 
     host: str, 
-    port: int
+    port: int,
+    benchmarking: bool = False
 ) -> None:
     async with KOS(ip=host, port=port) as sim_kos:
         # USE CONFIGURE ACTUATOR AT YOUR OWN RISK 
 
-        for actuator in ACTUATOR_LIST: 
-            await sim_kos.actuator.configure_actuator(
-                actuator_id=actuator.actuator_id,
-                kp=actuator.kp,
-                kd=actuator.kd,
-                max_torque=actuator.max_torque
-            )
+        if not benchmarking:
+            for actuator in ACTUATOR_LIST: 
+                await sim_kos.actuator.configure_actuator(
+                    actuator_id=actuator.actuator_id,
+                    kp=actuator.kp,
+                    kd=actuator.kd,
+                    max_torque=actuator.max_torque
+                )
         # Initialize position and orientation
         base_pos = [0.0, 0.0, 1.25]  # x, y, z
         base_quat = [1.0, 0.0, 0.0, 0.0]  # w, x, y, z
@@ -155,11 +282,12 @@ async def simple_walking(
             joint_values.append({"name": actuator.joint_name, "pos": pos})
 
         # breakpoint()
-        await sim_kos.sim.reset(
-            pos={"x": base_pos[0], "y": base_pos[1], "z": base_pos[2]},
-            quat={"w": base_quat[0], "x": base_quat[1], "y": base_quat[2], "z": base_quat[3]},
-            joints=joint_values
-        )
+        if not benchmarking:
+            await sim_kos.sim.reset(
+                pos={"x": base_pos[0], "y": base_pos[1], "z": base_pos[2]},
+                quat={"w": base_quat[0], "x": base_quat[1], "y": base_quat[2], "z": base_quat[3]},
+                joints=joint_values
+            )
 
 
 
@@ -227,14 +355,20 @@ async def simple_walking(
         }
         # TODO Copy automatic code
 
+        latencies = []
+
         start_time = time.time()
         while time.time() < end_time:
             loop_start_time = time.time()
         
-            response, raw_quat = await asyncio.gather(
-                sim_kos.actuator.get_actuators_state(ACTUATOR_IDS),
-                sim_kos.imu.get_quaternion()
-            )
+            if benchmarking:
+                response = MOCK_ACTUATORS_STATE_RESPONSE
+                raw_quat = MOCK_IMU_QUATERNION_RESPONSE
+            else:
+                response, raw_quat = await asyncio.gather(
+                    sim_kos.actuator.get_actuators_state(ACTUATOR_IDS),
+                    sim_kos.imu.get_quaternion()
+                )
             positions = np.array([math.radians(state.position) for state in response.states])
             velocities = np.array([math.radians(state.velocity) for state in response.states])
             # r = R.from_quat([raw_quat.x, raw_quat.y, raw_quat.z, raw_quat.w])
@@ -281,9 +415,21 @@ async def simple_walking(
                 commands.append({"actuator_id": actuator_id, "position": command_deg})
             
             await sim_kos.actuator.command_actuators(commands)
-            print(commands)
-            waiting_time = 1 / frequency
             loop_end_time = time.time()
+            waiting_time = 1 / frequency
+            if not benchmarking:
+                print(commands)
+            else:
+                latency = loop_end_time - loop_start_time
+                print(f"{loop_start_time=}, loop_time={latency:.3f}")
+                latencies.append(latency)
+                if len(latencies) % 50 == 0:
+                    avg = np.mean(latencies)
+                    std = np.std(latencies)
+                    print(f"Mean: {avg:.3f}, Standard Deviation: {std:.3f}, Num Samples: {len(latencies)}")
+                    print(f"")
+                    if len(latencies) % 200 == 0:
+                        latencies = []
             sleep_time = max(0, waiting_time - (loop_end_time - loop_start_time))
             await asyncio.sleep(sleep_time)
 
@@ -295,6 +441,8 @@ async def main() -> None:
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--sim-only", action="store_true",
                         help="Run simulation only without connecting to the real robot")
+    parser.add_argument("--benchmarking", action="store_true",
+                        help="For latency benchmarks on the Respberry Pi board without Imu and Actuators connected.")
     parser.add_argument("--model-path", 
         type=str, 
         default="assets/saved_checkpoints/2025-02-20_00-28-33_model_2600",
@@ -328,7 +476,7 @@ async def main() -> None:
             -0.6981317007977318, 0.3490658503988659
         ]
 
-        await simple_walking(session, default_position, args.host, args.port)
+        await simple_walking(session, default_position, args.host, args.port, args.benchmarking)
 
     except Exception:
         logger.exception("Simulator error")
