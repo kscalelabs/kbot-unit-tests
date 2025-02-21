@@ -183,17 +183,6 @@ async def test_client(host: str = "localhost", port: int = 50051) -> None:
         #     }
         # )
         # await kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 1.0] + [0.0] * 20})
-        await kos.sim.reset(
-            pos={"x": 0.0, "y": 0.05, "z": 0.10},
-            quat={"x": 0, "y": 0.70710678, "z": 0.0, "w": 0.70710678},
-            joints=[
-                {
-                    "name": ACTUATOR_TO_JOINT_MAP[actuator.actuator_id],
-                    "pos": 0.0,
-                }
-                for actuator in ACTUATOR_LIST
-            ],
-        )
 
 
         # Configure all actuators with higher gains for legs
@@ -212,6 +201,26 @@ async def test_client(host: str = "localhost", port: int = 50051) -> None:
                 max_torque=actuator.max_torque,
                 torque_enabled=True,
             )
+
+        await kos.sim.reset(
+            pos={"x": 0.0, "y": 0.0, "z": 0.5},
+            quat={"x": -0.707, "y": 0.0, "z": 0.0, "w": 0.707},
+            joints=[
+                {
+                    "name": ACTUATOR_TO_JOINT_MAP[actuator.actuator_id],
+                    "pos": 0.0,
+                }
+                for actuator in ACTUATOR_LIST
+            ],
+        )
+        await asyncio.sleep(0.2)
+
+        while True:
+            commands = []
+            for actuator in ACTUATOR_LIST:
+                commands.append({"actuator_id": actuator.actuator_id, "position": 0})
+            await kos.actuator.command_actuators(commands)
+            await asyncio.sleep(0.2)
 
         # Execute stand-up sequence
         await stand_up(kos)
