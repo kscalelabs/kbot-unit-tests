@@ -182,11 +182,11 @@ async def main() -> None:
     parser.add_argument("--port", type=int, default=50051)
     parser.add_argument("--num-seconds", type=float, default=None)
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--model", type=str, default="assets/standing.onnx")
     args = parser.parse_args()
 
     colorlogging.configure(level=logging.DEBUG if args.debug else logging.INFO)
-    breakpoint()
-    model_path = Path(__file__).parent.parent / "assets" / "standing.onnx"
+    model_path = Path(__file__).parent.parent / args.model
 
     # Defines the default joint positions for the legs.
     default_position = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
