@@ -44,6 +44,30 @@ ACTUATOR_LIST: list[Actuator] = [
     Actuator(45, 18, 80.0, 10.0, 17.0),  # right_ankle_02
 ]
 
+# Add this mapping at the top of the file with other constants
+ACTUATOR_TO_JOINT_MAP = {
+    11: "right_shoulder_pitch_03",
+    12: "right_shoulder_roll_03", 
+    13: "right_shoulder_yaw_02",
+    14: "right_elbow_02",
+    15: "right_wrist_02",
+    21: "left_shoulder_pitch_03",
+    22: "left_shoulder_roll_03",
+    23: "left_shoulder_yaw_02",
+    24: "left_elbow_02",
+    25: "left_wrist_02",
+    31: "right_hip_pitch_04",
+    32: "right_hip_roll_03",
+    33: "right_hip_yaw_03",
+    34: "right_knee_04",
+    35: "right_ankle_02",
+    41: "left_hip_pitch_04",
+    42: "left_hip_roll_03",
+    43: "left_hip_yaw_03",
+    44: "left_knee_04",
+    45: "left_ankle_02",
+}
+
 
 async def stand_up(kos: KOS) -> None:
     """Execute stand-up sequence from prone position."""
@@ -146,11 +170,11 @@ async def test_client(host: str = "localhost", port: int = 50051) -> None:
     logger.info("Starting stand-up client...")
 
     async with KOS(ip=host, port=port) as kos:
-        # Start the robot lying down with zeroed joints, but slightly higher
-        init_xyz = [0.0, 0.0, 0.3]  # Increased height to reduce ground friction
-        init_quat = list(R.from_euler("xyz", [-90.0, -90.0, 0.0], degrees=True).as_quat())
-        init_joints = [0.0] * len(ACTUATOR_LIST)
-        # breakpoint()
+        # # Start the robot lying down with zeroed joints, but slightly higher
+        # init_xyz = [0.0, 0.0, 0.4]  # Increased height to reduce ground friction
+        # init_quat = list(R.from_euler("xyz", [00.0, 0.0, 0.0], degrees=True).as_quat())
+        # init_joints = [0.0] * len(ACTUATOR_LIST)
+        # # breakpoint()
         # Reset the simulation.
         # await kos.sim.resegit(
         #     initial_state={
@@ -158,17 +182,17 @@ async def test_client(host: str = "localhost", port: int = 50051) -> None:
         #         "qvel": [0.0] * len(ACTUATOR_LIST),
         #     }
         # )
-
+        # await kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 1.0] + [0.0] * 20})
         await kos.sim.reset(
-            pos={"x": 0.0, "y": 0.0, "z": 0.8},
+            pos={"x": 0.0, "y": 0.05, "z": 0.10},
             quat={"x": 0, "y": 0.70710678, "z": 0.0, "w": 0.70710678},
-            # joints=[
-            #     {
-            #         "name": actuator.joint_name,
-            #         "pos": 0.0,
-            #     }
-            #     for actuator in ACTUATOR_LIST
-            # ],
+            joints=[
+                {
+                    "name": ACTUATOR_TO_JOINT_MAP[actuator.actuator_id],
+                    "pos": 0.0,
+                }
+                for actuator in ACTUATOR_LIST
+            ],
         )
 
 
