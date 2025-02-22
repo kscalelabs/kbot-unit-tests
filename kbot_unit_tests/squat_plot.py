@@ -121,16 +121,16 @@ ACTUATOR_LIST = [
     Actuator(23, 11, 50.0, 5.0, 17.0, "right_shoulder_yaw_02"),
     Actuator(24, 15, 50.0, 5.0, 17.0, "right_elbow_02"),
     Actuator(25, 19, 20.0, 2.0, 17.0, "right_wrist_02"),
-    Actuator(31, 0, 300.0, 5.0, 100.0, "left_hip_pitch_04"),
-    Actuator(32, 4, 300.0, 5.0, 100.0, "left_hip_roll_03"),
-    Actuator(33, 8, 100.0, 5.0, 100.0, "left_hip_yaw_03"),
-    Actuator(34, 12, 200.0, 5.0, 100.0, "left_knee_04"),
-    Actuator(35, 16, 50.0, 1.0, 100.0, "left_ankle_02"),
-    Actuator(41, 2, 300.0, 5.0, 100.0, "right_hip_pitch_04"),
-    Actuator(42, 6, 300.0, 5.0, 100.0, "right_hip_roll_03"),
-    Actuator(43, 10, 100.0, 5.0, 100.0, "right_hip_yaw_03"),
-    Actuator(44, 14, 200.0, 5.0, 100.0, "right_knee_04"),
-    Actuator(45, 18, 50.0, 1.0, 100.0, "right_ankle_02"),
+    Actuator(31, 0, 150.0, 5.0, 100.0, "left_hip_pitch_04"),
+    Actuator(32, 4, 150.0, 5.0, 100.0, "left_hip_roll_03"),
+    Actuator(33, 8, 50.0, 5.0, 100.0, "left_hip_yaw_03"),
+    Actuator(34, 12, 100.0, 5.0, 100.0, "left_knee_04"),
+    Actuator(35, 16, 50.0, 1.0, 17.0, "left_ankle_02"),
+    Actuator(41, 2, 150.0, 5.0, 100.0, "right_hip_pitch_04"),
+    Actuator(42, 6, 150.0, 5.0, 100.0, "right_hip_roll_03"),
+    Actuator(43, 10, 50.0, 5.0, 100.0, "right_hip_yaw_03"),
+    Actuator(44, 14, 150.0, 5.0, 100.0, "right_knee_04"),
+    Actuator(45, 18, 50.0, 1.0, 17.0, "right_ankle_02"),
 ]
 
 
@@ -179,64 +179,70 @@ async def smooth_move_joints(
 
 def plot_leg_data(sim_data: List[dict], leg: str = "left", real_data: Optional[List[dict]] = None) -> None:
     """
-    Plot data for either left or right leg actuators with extended time range.
-
-    Args:
-        sim_data: List of simulation data points
-        leg: Which leg to plot ("left" or "right")
-        real_data: Optional list of real robot data points
+    Plot data for either left or right leg actuators with duplicate handling.
     """
     try:
-        # Filter actuator IDs for the specified leg
-        leg_actuator_ranges = {
-            "left": range(31, 36),  # Left leg actuator IDs
-            "right": range(41, 46),  # Right leg actuator IDs
-        }
+        leg_actuator_ranges = {"left": range(31, 36), "right": range(41, 46)}
 
         actuator_ids = sorted(
             list({d["actuator_id"] for d in sim_data if d["actuator_id"] in leg_actuator_ranges[leg]})
         )
+
+        # Function to deduplicate data points
+        def deduplicate_data(data_list, actuator_id):
+            # Sort by time to ensure we get consistent results
+            actuator_data = sorted([d for d in data_list if d["actuator_id"] == actuator_id], key=lambda x: x["time"])
+
+            # Use dictionary to keep only latest value for each timestamp
+            deduped = {}
+            for d in actuator_data:
+                deduped[d["time"]] = d
+
+            # Convert back to sorted list
+            return sorted(deduped.values(), key=lambda x: x["time"])
+
+        # Rest of the visualization code remains the same, but use deduped data
         num_actuators = len(actuator_ids)
 
-        # Calculate global time range with extended padding
+        # Calculate global time range
         all_times = []
-        for d in sim_data:
-            all_times.append(d["time"])
-        if real_data:
-            for d in real_data:
-                all_times.append(d["time"])
+        for actuator_id in actuator_ids:
+            deduped_sim = deduplicate_data(sim_data, actuator_id)
+            all_times.extend(d["time"] for d in deduped_sim)
+            if real_data:
+                deduped_real = deduplicate_data(real_data, actuator_id)
+                all_times.extend(d["time"] for d in deduped_real)
 
         time_min = min(all_times)
         time_max = max(all_times)
-
-        # Extend time range by a fixed amount (e.g., 2 seconds) on each side
-        # This ensures we see the full movement plus some padding
-        time_padding = 2.0  # 2 seconds padding on each side
+        time_padding = 2.0
         global_xlim = (time_min - time_padding, time_max + time_padding)
 
-        # Create figure with proper subplot grid - one row per actuator
+        # Create figure
         fig, axes = plt.subplots(num_actuators, 4, figsize=(20, 5 * num_actuators))
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         fig.suptitle(f"{leg.title()} Leg Actuators Performance Analysis - {timestamp}", fontsize=16)
 
-        # Handle case where there's only one actuator (axes won't be 2D)
         if num_actuators == 1:
             axes = [axes]
 
-        # Plot each actuator
+        # Plot each actuator with deduped data
         for idx, actuator_id in enumerate(actuator_ids):
             actuator = next(a for a in ACTUATOR_LIST if a.actuator_id == actuator_id)
             logger.info(f"Plotting data for {actuator.joint_name} (ID: {actuator_id})")
 
-            # Get data for this actuator
-            sim_actuator_data = [d for d in sim_data if d["actuator_id"] == actuator_id]
-            real_actuator_data = [d for d in real_data if d["actuator_id"] == actuator_id] if real_data else None
+            # Get deduplicated data
+            sim_actuator_data = deduplicate_data(sim_data, actuator_id)
+            real_actuator_data = deduplicate_data(real_data, actuator_id) if real_data else None
 
             if not sim_actuator_data:
                 continue
 
             sim_times = [d["time"] for d in sim_actuator_data]
             real_times = [d["time"] for d in real_actuator_data] if real_actuator_data else None
+
+            # Log some stats about the data
+            logger.debug(f"Actuator {actuator_id}: {len(sim_times)} unique timestamps")
 
             # Position plot
             ax1 = axes[idx][0]
@@ -534,9 +540,9 @@ async def execute_and_log_movement(sim_kos, real_kos, all_ids, commands, current
 async def main() -> None:
     """Main function to run the squat test."""
     parser = argparse.ArgumentParser(description="Squat test with plotting")
-    parser.add_argument("--host", type=str, default="100.89.14.31", help="Simulation host")
+    parser.add_argument("--host", type=str, default="10.33.14.31", help="Simulation host")
     parser.add_argument("--port", type=int, default=50051, help="Port number")
-    parser.add_argument("--real-host", type=str, default="100.89.14.31", help="Real robot host")
+    parser.add_argument("--real-host", type=str, default="10.33.14.31", help="Real robot host")
     parser.add_argument("--sim-only", action="store_true", help="Run only in simulation")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
