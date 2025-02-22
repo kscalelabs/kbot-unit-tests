@@ -188,11 +188,11 @@ async def stand_up(kos: KOS) -> None:
     logger.info("Phase 4: Standing up")
     await kos.actuator.command_actuators(
         [
-            {"actuator_id": 32, "position": -10.0},   # left hip roll
-            {"actuator_id": 42, "position": 10.0},  # right hip roll
+            {"actuator_id": 32, "position": 0.0},   # left hip roll
+            {"actuator_id": 42, "position": 0.0},  # right hip roll
 
-            {"actuator_id": 34, "position": 130.0},     # right_knee_04
-            {"actuator_id": 44, "position": -130.0},    # left_knee_04
+            {"actuator_id": 34, "position": 140.0},     # right_knee_04
+            {"actuator_id": 44, "position": -140.0},    # left_knee_04
             # i want hi pitch to be 0
             {"actuator_id": 31, "position": 125.0},     # left hip pitch
             {"actuator_id": 41, "position": -125.0},    # right hip pitch
@@ -223,34 +223,19 @@ async def stand_up(kos: KOS) -> None:
              {"actuator_id": 24, "position": 0.0},     # right elbow   
         ]
     )
-    
     await asyncio.sleep(2.0)
     logger.info("Phase 4: Standing up")
 
     logger.info("Phase 4: Standing up")
     await kos.actuator.command_actuators(
         [
-            {"actuator_id": 33, "position": 5.0},   # left hip roll
-            {"actuator_id": 43, "position": -5.0},    # right hip roll
+            {"actuator_id": 33, "position": 0.0},   # left hip roll
+            {"actuator_id": 43, "position": 0.0},    # right hip roll
             #    {"actuator_id": 34, "position": 60.0},     # right_knee_04
             # {"actuator_id": 44, "position": -60.0},    # left_knee_04
         ]
     )
-    await asyncio.sleep(3.0)
-    logger.info("Phase 4: Standing up")
-    await kos.actuator.command_actuators(
-        [
-                # i want hi pitch to be 0
-            {"actuator_id": 31, "position": 90.0},     # left hip pitch
-            {"actuator_id": 41, "position": -90.0},    # right hip pitch
-             {"actuator_id": 11, "position": 90.0},     # left shoulder pitch
-            {"actuator_id": 21, "position": -90.0},    # right shoulder pitch
-            # i want the hip yaw to be 0
-            {"actuator_id": 33, "position": 0.0},   # left hip yaw
-            {"actuator_id": 43, "position": 0.0},    # right hip yaw
-            # i want shoulder roll to be 0
-        ]
-    )
+
 
 
 
