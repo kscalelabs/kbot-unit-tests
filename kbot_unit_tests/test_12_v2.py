@@ -34,12 +34,12 @@ ACTUATOR_LIST: list[Actuator] = [
     Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
     Actuator(31, 0, 250.0, 30.0, 120.0),  # left_hip_pitch_04
     Actuator(32, 4, 150.0, 8.0, 60.0),  # left_hip_roll_03
-    Actuator(33, 8, 250.0, 8.0, 60.0),  # left_hip_yaw_03
+    Actuator(33, 8, 250.0, 8.0, 120.0),  # left_hip_yaw_03
     Actuator(34, 12, 200.0, 8.0, 120.0),  # left_knee_04
     Actuator(35, 16, 80.0, 10.0, 17.0),  # left_ankle_02
     Actuator(41, 2, 250.0, 30.0, 120.0),  # right_hip_pitch_04
     Actuator(42, 6, 150.0, 8.0, 60.0),  # right_hip_roll_03
-    Actuator(43, 10, 250.0, 8.0, 60.0),  # right_hip_yaw_03
+    Actuator(43, 10, 250.0, 8.0, 120.0),  # right_hip_yaw_03
     Actuator(44, 14, 200.0, 8.0, 120.0),  # right_knee_04
     Actuator(45, 18, 80.0, 10.0, 17.0),  # right_ankle_02
 ]
@@ -185,21 +185,20 @@ async def stand_up(kos: KOS) -> None:
     )
     await asyncio.sleep(2.0)
     logger.info("Phase 4: Standing up")
-
     logger.info("Phase 4: Standing up")
     await kos.actuator.command_actuators(
         [
-            {"actuator_id": 32, "position": -30.0},   # left hip roll
-            {"actuator_id": 42, "position": 30.0},  # right hip roll
+            {"actuator_id": 32, "position": -10.0},   # left hip roll
+            {"actuator_id": 42, "position": 10.0},  # right hip roll
 
-            {"actuator_id": 34, "position": 120.0},     # left knee
-            {"actuator_id": 44, "position": -120.0},    # right knee
+            {"actuator_id": 34, "position": 130.0},     # right_knee_04
+            {"actuator_id": 44, "position": -130.0},    # left_knee_04
             # i want hi pitch to be 0
-            {"actuator_id": 31, "position": 100.0},     # left hip pitch
-            {"actuator_id": 41, "position": -100.0},    # right hip pitch
+            {"actuator_id": 31, "position": 125.0},     # left hip pitch
+            {"actuator_id": 41, "position": -125.0},    # right hip pitch
             # i want the ankle to be 0
-            {"actuator_id": 35, "position": -45.0},     # left ankle
-            {"actuator_id": 45, "position": 45.0},    # right ankle
+            {"actuator_id": 35, "position": -180.0},     # left ankle
+            {"actuator_id": 45, "position": 180.0},    # right ankle
             # i want the shoulder pitch to be 0
             {"actuator_id": 11, "position": 80.0},     # left shoulder pitch
             {"actuator_id": 21, "position": -80.0},    # right shoulder pitch
@@ -224,6 +223,7 @@ async def stand_up(kos: KOS) -> None:
              {"actuator_id": 24, "position": 0.0},     # right elbow   
         ]
     )
+    
     await asyncio.sleep(2.0)
     logger.info("Phase 4: Standing up")
 
@@ -232,9 +232,25 @@ async def stand_up(kos: KOS) -> None:
         [
             {"actuator_id": 33, "position": 5.0},   # left hip roll
             {"actuator_id": 43, "position": -5.0},    # right hip roll
+            #    {"actuator_id": 34, "position": 60.0},     # right_knee_04
+            # {"actuator_id": 44, "position": -60.0},    # left_knee_04
         ]
     )
-    await asyncio.sleep(2.0)
+    await asyncio.sleep(3.0)
+    logger.info("Phase 4: Standing up")
+    await kos.actuator.command_actuators(
+        [
+                # i want hi pitch to be 0
+            {"actuator_id": 31, "position": 90.0},     # left hip pitch
+            {"actuator_id": 41, "position": -90.0},    # right hip pitch
+             {"actuator_id": 11, "position": 90.0},     # left shoulder pitch
+            {"actuator_id": 21, "position": -90.0},    # right shoulder pitch
+            # i want the hip yaw to be 0
+            {"actuator_id": 33, "position": 0.0},   # left hip yaw
+            {"actuator_id": 43, "position": 0.0},    # right hip yaw
+            # i want shoulder roll to be 0
+        ]
+    )
 
 
 
