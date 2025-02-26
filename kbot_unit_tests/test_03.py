@@ -7,6 +7,7 @@ import logging
 import time
 from dataclasses import dataclass
 import json
+from pathlib import Path
 from typing import Dict, List
 
 import colorlogging
@@ -60,19 +61,19 @@ class TestData:
 
 ACTUATOR_LIST: list[Actuator] = [
     # actuator id, nn id, kp, kd, max_torque
-    Actuator(11, 1, 150.0, 8.0, 60.0),  # left_shoulder_pitch_03
-    Actuator(12, 5, 150.0, 8.0, 60.0),  # left_shoulder_roll_03
-    Actuator(13, 9, 50.0, 5.0, 17.0),  # left_shoulder_yaw_02
-    Actuator(14, 13, 50.0, 5.0, 17.0),  # left_elbow_02
-    Actuator(15, 17, 20.0, 2.0, 17.0),  # left_wrist_02
-    Actuator(21, 3, 150.0, 8.0, 60.0),  # right_shoulder_pitch_03
-    Actuator(22, 7, 150.0, 8.0, 60.0),  # right_shoulder_roll_03
-    Actuator(23, 11, 50.0, 5.0, 17.0),  # right_shoulder_yaw_02
-    Actuator(24, 15, 50.0, 5.0, 17.0),  # right_elbow_02
-    Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
-    Actuator(31, 0, 100.0, 6.1504, 80.0),  # left_hip_pitch_04 (RS04_Pitch)
-    Actuator(32, 4, 50.0, 11.152, 60.0),  # left_hip_roll_03 (RS03_Roll) #* DONE
-    Actuator(33, 8, 50.0, 11.152, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
+    # Actuator(11, 1, 150.0, 8.0, 60.0),  # left_shoulder_pitch_03
+    # Actuator(12, 5, 150.0, 8.0, 60.0),  # left_shoulder_roll_03
+    # Actuator(13, 9, 50.0, 5.0, 17.0),  # left_shoulder_yaw_02
+    # Actuator(14, 13, 50.0, 5.0, 17.0),  # left_elbow_02
+    # Actuator(15, 17, 20.0, 2.0, 17.0),  # left_wrist_02
+    # Actuator(21, 3, 150.0, 8.0, 60.0),  # right_shoulder_pitch_03
+    # Actuator(22, 7, 150.0, 8.0, 60.0),  # right_shoulder_roll_03
+    Actuator(23, 11, 50.0, 2.0, 17.0),  # right_shoulder_yaw_02
+    # Actuator(24, 15, 50.0, 5.0, 17.0),  # right_elbow_02
+    # Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
+    # Actuator(31, 0, 100.0, 6.1504, 80.0),  # left_hip_pitch_04 (RS04_Pitch)
+    # Actuator(32, 4, 50.0, 11.152, 60.0),  # left_hip_roll_03 (RS03_Roll) #* DONE
+    # Actuator(33, 8, 50.0, 11.152, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
     Actuator(34, 12, 100.0, 6.1504, 80.0),  # left_knee_04 (RS04_Knee)
     Actuator(35, 16, 20.0, 0.6, 17.0),  # left_ankle_02 (RS02)
     Actuator(41, 2, 100, 7.0, 80.0),  # right_hip_pitch_04 (RS04_Pitch) #* DONE
@@ -83,8 +84,8 @@ ACTUATOR_LIST: list[Actuator] = [
 ]
 
 # Define the actuators we want to move
-ACTUATORS_TO_MOVE = [44]  # left/right hip roll and left/right ankle
-
+ACTUATORS_TO_MOVE = [41]  # left/right hip roll and left/right ankle
+#! diff knee has offsets in different pos/neg directions
 async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
     logger.info("Starting test client...")
     
@@ -94,8 +95,8 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
 
     # Test parameters
     amplitude = 30.0   # degrees (half of peak-to-peak)
-    offset = -30.0 # degrees
-    frequency = 2  # Hz
+    offset = 0.0 # degrees
+    frequency = 0.5  # Hz
     duration = 5.0   # seconds
 
     # Reset the simulation
@@ -138,10 +139,10 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         t = current_time - start_time
         
         # Calculate sine wave position with offset
-        # angular_freq = 2 * np.pi * frequency
-        # position = offset + amplitude * np.sin(angular_freq * t)
+        angular_freq = 2 * np.pi * frequency
+        position = offset + amplitude * np.sin(angular_freq * t)
         # velocity = amplitude * angular_freq * np.cos(angular_freq * t)
-        # # velocity = 0.0
+        velocity = 0.0
 
         # Calculate square wave position with offset.
         # position = offset + amplitude * np.sign(np.sin(2 * np.pi * frequency * t))
@@ -152,8 +153,8 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         # velocity = amplitude * np.sign(np.sin(2 * np.pi * frequency * t))
 
         # Calculate triangle wave position with offset.
-        position = offset + amplitude * (t % (1 / frequency)) * np.sign(np.sin(2 * np.pi * frequency * t))
-        velocity = amplitude * np.sign(np.sin(2 * np.pi * frequency * t))
+        # position = offset + amplitude * (t % (1 / frequency)) * np.sign(np.sin(2 * np.pi * frequency * t))
+        # velocity = amplitude * np.sign(np.sin(2 * np.pi * frequency * t))
 
         # Filter actuator list to only include actuators we want to move
         active_actuators = [actuator for actuator in ACTUATOR_LIST if actuator.actuator_id in ACTUATORS_TO_MOVE]
@@ -171,6 +172,7 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None) -> None:
         state_tasks = [sim_kos.actuator.get_actuators_state(actuator.actuator_id for actuator in active_actuators)]
         
         if real_kos:
+            print("Commanding real robot...")
             command_tasks.append(real_kos.actuator.command_actuators(commands))
             state_tasks.append(real_kos.actuator.get_actuators_state(actuator.actuator_id for actuator in active_actuators))
 
@@ -228,10 +230,9 @@ async def main() -> None:
             await test_client(sim_kos)
     else:
         async with KOS(ip=args.host, port=args.port) as sim_kos, \
-                   KOS(ip="100.89.14.31", port=args.port) as real_kos:
+                   KOS(ip="100.117.248.15", port=args.port) as real_kos:
             await test_client(sim_kos, real_kos)
 
 
 if __name__ == "__main__":
-    # python -m examples.kbot.balancing
     asyncio.run(main())
