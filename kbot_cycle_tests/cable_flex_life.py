@@ -188,7 +188,7 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None,
         return
     
     # Initialize separate test data loggers for sim and real
-    sim_data = TestData()
+    sim_data = TestData() if sim_kos else None
     real_data = TestData() if real_kos else None
 
     # Get list of actuator IDs to move
@@ -196,31 +196,37 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None,
     logger.info(f"Moving actuators: {actuator_ids_to_move}")
     
     try:
-        # Reset the simulation
-        await sim_kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 1.0] + [0.0] * 20})
+        # Reset the simulation if we're using it
+        if sim_kos:
+            await sim_kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 1.0] + [0.0] * 20})
 
         # First disable only the motors we need to move
         logger.info("Disabling motors for test...")
         active_actuators = [a for a in ACTUATOR_LIST if a.actuator_id in actuator_ids_to_move]
         
         for actuator in active_actuators:
-            await sim_kos.actuator.configure_actuator(actuator_id=actuator.actuator_id, torque_enabled=False)
+            if sim_kos:
+                await sim_kos.actuator.configure_actuator(actuator_id=actuator.actuator_id, torque_enabled=False)
             if real_kos:
                 await real_kos.actuator.configure_actuator(actuator_id=actuator.actuator_id, torque_enabled=False)
         
         await asyncio.sleep(1)
 
+
+
         # Configure only the motors we need with their gains
         logger.info("Configuring motors for test...")
+        logger.info(f"Real robot connection: {real_kos}")
         
         for actuator in active_actuators:
             config_commands = []
-            config_commands.append(sim_kos.actuator.configure_actuator(
-                actuator_id=actuator.actuator_id,
-                kp=actuator.kp,
-                kd=actuator.kd,
-                torque_enabled=True,
-            ))
+            if sim_kos:
+                config_commands.append(sim_kos.actuator.configure_actuator(
+                    actuator_id=actuator.actuator_id,
+                    kp=actuator.kp,
+                    kd=actuator.kd,
+                    torque_enabled=True,
+                ))
             if real_kos:
                 config_commands.append(real_kos.actuator.configure_actuator(
                     actuator_id=actuator.actuator_id,
@@ -251,8 +257,12 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None,
                 })
 
             # Send commands to simulation and real robot if available
-            command_tasks = [sim_kos.actuator.command_actuators(commands)]
-            state_tasks = [sim_kos.actuator.get_actuators_state(actuator_ids_to_move)]
+            command_tasks = []
+            state_tasks = []
+            
+            if sim_kos:
+                command_tasks.append(sim_kos.actuator.command_actuators(commands))
+                state_tasks.append(sim_kos.actuator.get_actuators_state(actuator_ids_to_move))
             
             if real_kos:
                 command_tasks.append(real_kos.actuator.command_actuators(commands))
@@ -262,16 +272,19 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None,
             states_list = await asyncio.gather(*state_tasks)
 
             # Log states separately for sim and real
-            for state in states_list[0].states:
-                # Find the corresponding actuator to get kp and kd
-                actuator = next(a for a in ACTUATOR_LIST if a.actuator_id == state.actuator_id)
-                profile = joint_profiles[state.actuator_id]
-                position, velocity = calculate_position_velocity(t, profile)
-                sim_data.log_state(t, state.actuator_id, state.position, state.velocity,
-                                position, velocity, actuator.kp, actuator.kd)
+            state_idx = 0
+            if sim_kos:
+                for state in states_list[state_idx].states:
+                    # Find the corresponding actuator to get kp and kd
+                    actuator = next(a for a in ACTUATOR_LIST if a.actuator_id == state.actuator_id)
+                    profile = joint_profiles[state.actuator_id]
+                    position, velocity = calculate_position_velocity(t, profile)
+                    sim_data.log_state(t, state.actuator_id, state.position, state.velocity,
+                                    position, velocity, actuator.kp, actuator.kd)
+                state_idx += 1
             
-            if real_kos and len(states_list) > 1:
-                for state in states_list[1].states:
+            if real_kos:
+                for state in states_list[state_idx].states:
                     actuator = next(a for a in ACTUATOR_LIST if a.actuator_id == state.actuator_id)
                     profile = joint_profiles[state.actuator_id]
                     position, velocity = calculate_position_velocity(t, profile)
@@ -298,7 +311,8 @@ async def test_client(sim_kos: KOS, real_kos: KOS = None,
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     
-    sim_data.save_to_json(str(output_dir / f"sim_actuator_states_{timestamp}.json"))
+    if sim_data:
+        sim_data.save_to_json(str(output_dir / f"sim_actuator_states_{timestamp}.json"))
     if real_data:
         real_data.save_to_json(str(output_dir / f"real_actuator_states_{timestamp}.json"))
     
@@ -313,7 +327,9 @@ async def main() -> None:
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--deploy", action="store_true",
                        help="Connect to the real robot (default: simulation only)")
-    parser.add_argument("--real-host", type=str, default="100.117.248.15", 
+    parser.add_argument("--deploy-only", action="store_true",
+                       help="Connect to the real robot only (no simulation)")
+    parser.add_argument("--real-host", type=str, default="localhost", 
                        help="KOS host for real robot")
     parser.add_argument("--duration", type=float, default=3600.0,
                        help="Test duration in seconds")
@@ -327,20 +343,28 @@ async def main() -> None:
     # Define joint motion profiles for the test
     # This example moves multiple joints with different sine curves
     joint_profiles = {
-            41: JointMotionProfile(amplitude=30.0, offset=0.0, frequency=1.0, waveform="sine", time_offset=3.14), 
-            42: JointMotionProfile(amplitude=10.0, offset=20.0, frequency=1.0, waveform="sine", time_offset=3.14),
-            43: JointMotionProfile(amplitude=20.0, offset=0.0, frequency=1.0, waveform="sine", time_offset=3.14),
-            44: JointMotionProfile(amplitude=30.0, offset=-30.0, frequency=1.0, waveform="sine", time_offset=0.0),
-            45: JointMotionProfile(amplitude=20.0, offset=0.0, frequency=1.0, waveform="sine", time_offset=0.0),
+            31: JointMotionProfile(amplitude=15.0, offset=0.0, frequency=2.0, waveform="sine", time_offset=3.14), 
+            32: JointMotionProfile(amplitude=15.0, offset=-20.0, frequency=1.0, waveform="sine", time_offset=3.14),
+            33: JointMotionProfile(amplitude=20.0, offset=0.0, frequency=2.0, waveform="sine", time_offset=3.14),
+            34: JointMotionProfile(amplitude=30.0, offset=30.0, frequency=2.0, waveform="sine", time_offset=0.0),
+            35: JointMotionProfile(amplitude=20.0, offset=0.0, frequency=2.0, waveform="sine", time_offset=0.0),
     }
 
     try:
-        if not args.deploy:
+        if args.deploy_only and args.deploy:
+            logger.warning("Both --deploy and --deploy-only flags were set. Using --deploy-only.")
+            args.deploy = False
+
+        if args.deploy_only:
+            logger.info(f"Running on real robot only at {args.real_host}")
+            async with KOS(ip=args.real_host, port=args.port) as real_kos:
+                await test_client(sim_kos=None, real_kos=real_kos, joint_profiles=joint_profiles, duration=args.duration)
+        elif not args.deploy:
             logger.info("Running in simulation mode only")
             async with KOS(ip=args.host, port=args.port) as sim_kos:
                 await test_client(sim_kos, joint_profiles=joint_profiles, duration=args.duration)
         else:
-            logger.info(f"Running in deploy mode with real robot at {args.real_host}")
+            logger.info(f"Running in deploy mode with real robot at {args.real_host} and simulation at {args.host}")
             async with KOS(ip=args.host, port=args.port) as sim_kos, \
                     KOS(ip=args.real_host, port=args.port) as real_kos:
                 await test_client(sim_kos, real_kos, joint_profiles=joint_profiles, duration=args.duration)
