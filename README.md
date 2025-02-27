@@ -61,7 +61,9 @@ ks robots urdf mujoco kbot-v1
 Please see issues: https://github.com/kscalelabs/kbot-unit-tests/issues
 
 
-## Assets 
+## Assets
+
 | Name | Description | Date Added | PR Link | Video Link |
-| recording_00 | Isaac Gym stable policy with old urdf | 2025m02d15 | |  |
-| recording_01 | Manual velocity scale | 2025m02d16 | https://photos.app.goo.gl/ZMFP185dwuCtf3ex5 |
+|---|---|---|---|---|
+| recording_00 | Isaac Gym stable policy with old urdf | 2025m02d15 | | |
+| recording_01 | Manual velocity scale | 2025m02d16 | https://photos.app.goo.gl/ZMFP185dwuCtf3ex5 | |
