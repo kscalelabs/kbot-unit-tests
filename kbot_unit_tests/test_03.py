@@ -61,19 +61,19 @@ class TestData:
 
 ACTUATOR_LIST: list[Actuator] = [
     # actuator id, nn id, kp, kd, max_torque
-    # Actuator(11, 1, 150.0, 8.0, 60.0),  # left_shoulder_pitch_03
-    # Actuator(12, 5, 150.0, 8.0, 60.0),  # left_shoulder_roll_03
-    # Actuator(13, 9, 50.0, 5.0, 17.0),  # left_shoulder_yaw_02
-    # Actuator(14, 13, 50.0, 5.0, 17.0),  # left_elbow_02
-    # Actuator(15, 17, 20.0, 2.0, 17.0),  # left_wrist_02
-    # Actuator(21, 3, 150.0, 8.0, 60.0),  # right_shoulder_pitch_03
-    # Actuator(22, 7, 150.0, 8.0, 60.0),  # right_shoulder_roll_03
+    Actuator(11, 1, 150.0, 8.0, 60.0),  # left_shoulder_pitch_03
+    Actuator(12, 5, 150.0, 8.0, 60.0),  # left_shoulder_roll_03
+    Actuator(13, 9, 50.0, 5.0, 17.0),  # left_shoulder_yaw_02
+    Actuator(14, 13, 50.0, 5.0, 17.0),  # left_elbow_02
+    Actuator(15, 17, 20.0, 2.0, 17.0),  # left_wrist_02
+    Actuator(21, 3, 150.0, 8.0, 60.0),  # right_shoulder_pitch_03
+    Actuator(22, 7, 150.0, 8.0, 60.0),  # right_shoulder_roll_03
     Actuator(23, 11, 50.0, 2.0, 17.0),  # right_shoulder_yaw_02
-    # Actuator(24, 15, 50.0, 5.0, 17.0),  # right_elbow_02
-    # Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
-    # Actuator(31, 0, 100.0, 6.1504, 80.0),  # left_hip_pitch_04 (RS04_Pitch)
-    # Actuator(32, 4, 50.0, 11.152, 60.0),  # left_hip_roll_03 (RS03_Roll) #* DONE
-    # Actuator(33, 8, 50.0, 11.152, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
+    Actuator(24, 15, 50.0, 5.0, 17.0),  # right_elbow_02
+    Actuator(25, 19, 20.0, 2.0, 17.0),  # right_wrist_02
+    Actuator(31, 0, 100.0, 6.1504, 80.0),  # left_hip_pitch_04 (RS04_Pitch)
+    Actuator(32, 4, 50.0, 11.152, 60.0),  # left_hip_roll_03 (RS03_Roll) #* DONE
+    Actuator(33, 8, 50.0, 11.152, 60.0),  # left_hip_yaw_03 (RS03_Yaw)
     Actuator(34, 12, 100.0, 6.1504, 80.0),  # left_knee_04 (RS04_Knee)
     Actuator(35, 16, 20.0, 0.6, 17.0),  # left_ankle_02 (RS02)
     Actuator(41, 2, 100, 7.0, 80.0),  # right_hip_pitch_04 (RS04_Pitch) #* DONE

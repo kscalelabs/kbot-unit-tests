@@ -4,7 +4,7 @@
 
 import re
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as f:
     long_description: str = f.read()
@@ -35,7 +35,7 @@ setup(
     python_requires=">=3.11",
     install_requires=requirements,
     extras_require={"dev": requirements_dev},
-    packages=["kbot_unit_tests"],
+    packages=["kbot_unit_tests", "kbot_cycle_tests"],
     # entry_points={
     #     "console_scripts": [
     #         "kbot_unit_tests.cli:main",

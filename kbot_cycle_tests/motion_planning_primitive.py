@@ -3,9 +3,33 @@ import time
 
 #* From Scott's basic motion planning code on Teleop. 
 #* Slight change to separate out trajectory generation from execution. 
-def find_points_to_target(current_angle: float, target: float, acceleration: float,
-                         V_MAX: float, dt: float, actuator_id: int,
-                         profile: str = "linear") -> tuple:
+def find_points_to_target(current_angle: float, target: float, acceleration: float = 100.0,
+                         V_MAX: float = 30.0, update_rate: float = 100.0, profile: str = "scurve") -> tuple:
+    """
+    Generate a trajectory for an actuator to move from the current angle to a target angle.
+    
+    This function creates a motion profile with either a linear (trapezoidal/triangular) or 
+    s-curve velocity profile, and returns the trajectory as lists of angles, velocities, and times.
+    
+    Args:
+        current_angle (float): The starting angle in degrees.
+        target (float): The target angle in degrees.
+        acceleration (float, optional): Maximum acceleration in deg/s². Defaults to 100.0.
+        V_MAX (float, optional): Maximum velocity in deg/s. Defaults to 30.0.
+        update_rate (float, optional): Frequency of trajectory points in Hz. Defaults to 100.0.
+        profile (str, optional): Motion profile type, either "linear" or "scurve". Defaults to "scurve".
+            - "linear": Trapezoidal velocity profile (or triangular if distance is short)
+            - "scurve": Smoothed velocity profile with continuous acceleration
+    
+    Returns:
+        tuple: A tuple containing three lists:
+            - trajectory_angles (list[float]): Angle positions at each time step
+            - trajectory_velocities (list[float]): Velocities at each time step
+            - trajectory_times (list[float]): Time points for each step in seconds
+    
+    Raises:
+        ValueError: If an unknown profile type is specified.
+    """
     displacement = target - current_angle
     distance = abs(displacement)
     direction = 1 if displacement >= 0 else -1
@@ -30,7 +54,7 @@ def find_points_to_target(current_angle: float, target: float, acceleration: flo
                 else:
                     return V_MAX - acceleration * (t - t_accel - t_flat)
         else:
-            print("Triangular case!")
+            print("Triangular case! Time too short to reach V_MAX.")
             # Triangular case: move too short to reach V_MAX.
             t_phase = math.sqrt(distance / acceleration)
             v_peak = acceleration * t_phase
@@ -78,6 +102,7 @@ def find_points_to_target(current_angle: float, target: float, acceleration: flo
     else:
         raise ValueError("Unknown profile type. Choose 'linear' or 'scurve'.")
 
+    dt = 1.0/ update_rate
     steps = int(total_time / dt)
     next_tick = time.perf_counter()
     
