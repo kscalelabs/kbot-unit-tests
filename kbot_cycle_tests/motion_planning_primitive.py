@@ -4,7 +4,7 @@ import time
 #* From Scott's basic motion planning code on Teleop. 
 #* Slight change to separate out trajectory generation from execution. 
 def find_points_to_target(current_angle: float, target: float, acceleration: float = 100.0,
-                         V_MAX: float = 30.0, update_rate: float = 100.0, profile: str = "scurve") -> tuple:
+                         V_MAX: float = 40.0, update_rate: float = 100.0, profile: str = "scurve") -> tuple:
     """
     Generate a trajectory for an actuator to move from the current angle to a target angle.
     

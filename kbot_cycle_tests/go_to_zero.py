@@ -18,10 +18,9 @@ from kbot_cycle_tests.trajectory_execution_primitive import (
 from kbot_cycle_tests.plot_motion_plan import plot_motion_plan
 
 
-async def squat(sim_kos: KOS = None, real_kos: KOS = None) -> None:
+async def go_to_zero(sim_kos: KOS = None, real_kos: KOS = None) -> None:
     """
-    Start the robot in a squatting position and then stand it up.
-    This approach helps us focus on getting the correct actuator positions first.
+    Move all robot actuators to the zero position.
     
     Args:
         sim_kos: KOS instance for simulation. Can be None if running only on real robot.
@@ -31,92 +30,57 @@ async def squat(sim_kos: KOS = None, real_kos: KOS = None) -> None:
     if sim_kos:
         await sim_kos.sim.reset(initial_state={"qpos": [0.0, 0.0, 1.5, 0.0, 0.0, 0.0, 1.0] + [0.0] * 20})
     
-    # Define the actuator IDs we'll be using for the squat
-    # Left leg: hip pitch (31), knee (34), ankle (35)
-    # Right leg: hip pitch (41), knee (44), ankle (45)
-    actuator_ids = [31, 41, 34, 44, 35, 45]
+    # Define all actuator IDs we want to move to zero
+    # Arms: shoulders, elbows, wrists
+    # Legs: hips, knees, ankles
+    actuator_ids = [
+        # Left arm
+        # 11, 12, 13, 14, 15,
+        # Right arm
+        21, 22, 23, 24, 25,
+        # Left leg
+        31, 32, 33, 34, 35,
+        # Right leg
+        41, 42, 43, 44, 45
+    ]
     
     # Get the actuator objects for the IDs we'll be using
-    squat_actuators = [ACTUATOR_LIST[actuator_id] for actuator_id in actuator_ids]
+    zero_actuators = [ACTUATOR_LIST[actuator_id] for actuator_id in actuator_ids]
     
     # Setup all the actuators we'll be using at once
     logger.info("Setting up actuators...")
-    await setup_actuators(sim_kos, squat_actuators, real_kos)
+    await setup_actuators(sim_kos, zero_actuators, real_kos)
     
     try:
-        # Initial squat position
-        logger.info("Moving to deep squat position...")
-        await move_actuators_with_trajectory(
-            sim_kos=sim_kos,
-            actuator_ids=actuator_ids,  # [left_hip, right_hip, left_knee, right_knee, left_ankle, right_ankle]
-            target_angles=[-85.0, -85.0, -130.0, -130.0, 130.0, 130.0],  # Deep squat position
-            real_kos=real_kos
-        )
+        # Get the current positions of all actuators
+        kos_to_use = sim_kos if sim_kos is not None else real_kos
+        if kos_to_use is None:
+            raise ValueError("Both sim_kos and real_kos cannot be None")
+            
+        state_response = await kos_to_use.actuator.get_actuators_state(actuator_ids)
+        current_angles = [state.position for state in state_response.states]
         
-        await asyncio.sleep(5)
+        logger.info(f"Current actuator angles: {current_angles}")
         
-        # WAYPOINT 1: Begin standing up - knees start first
-        logger.info("Beginning to stand up - knees first...")
-        await move_actuators_with_trajectory(
-            sim_kos=sim_kos,
-            actuator_ids=actuator_ids,
-            target_angles=[-55.0, -55.0, -90.0, -90.0, 40.0, 40.0],  # Knees start straightening while hips stay
-            real_kos=real_kos
-        )
-
-        # plot_motion_plan(current_angle=-55.0, target_angle=-40.0, profile="scurve", actuator_id=31)
+        # Create a list of zero angles for all actuators
+        target_angles = [0.0] * len(actuator_ids)
         
-        await asyncio.sleep(0.1)
-        
-        # WAYPOINT 2: Continue standing - knees and hips move together
-        logger.info("Continuing to stand - coordinated movement...")
+        # Move all actuators to zero position
+        logger.info("Moving all actuators to zero position...")
         await move_actuators_with_trajectory(
             sim_kos=sim_kos,
             actuator_ids=actuator_ids,
-            target_angles=[-40.0, -40.0, -60.0, -60.0, 30.0, 30.0],  # Both knees and hips moving
+            target_angles=target_angles,
             real_kos=real_kos
         )
         
-        await asyncio.sleep(0.1)
-        
-        # WAYPOINT 3: Mid-standing position
-        logger.info("Mid-standing position...")
-        await move_actuators_with_trajectory(
-            sim_kos=sim_kos,
-            actuator_ids=actuator_ids,
-            target_angles=[-25.0, -25.0, -30.0, -30.0, 20.0, 20.0],  # Continue coordinated movement
-            real_kos=real_kos
-        )
-        
-        await asyncio.sleep(0.1)
-        
-        # WAYPOINT 4: Almost standing
-        logger.info("Almost standing...")
-        await move_actuators_with_trajectory(
-            sim_kos=sim_kos,
-            actuator_ids=actuator_ids,
-            target_angles=[-10.0, -10.0, -15.0, -15.0, 5.0, 5.0],  # Almost straight
-            real_kos=real_kos
-        )
-        
-        await asyncio.sleep(0.1)
-        
-        # WAYPOINT 5: Fully standing
-        logger.info("Standing up completely...")
-        await move_actuators_with_trajectory(
-            sim_kos=sim_kos,
-            actuator_ids=actuator_ids,
-            target_angles=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Standing position
-            real_kos=real_kos
-        )
-        
-        # Wait to observe the standing position
-        await asyncio.sleep(10)
+        # Wait to observe the zero position
+        await asyncio.sleep(1)
         
     except asyncio.CancelledError:
         logger.warning("Operation was cancelled - safely disabling actuators before exit")
     except Exception as e:
-        logger.error(f"Error during squat operation: {e}")
+        logger.error(f"Error during go_to_zero operation: {e}")
     finally:
         # Disable all the actuators at once - this will always run, even if there's an exception
         logger.info("Disabling actuators...")
@@ -148,16 +112,16 @@ async def main() -> None:
         if args.deploy_only:
             logger.info(f"Running on real robot only at {args.real_host}")
             async with KOS(ip=args.real_host, port=args.port) as real_kos:
-                await squat(sim_kos=None, real_kos=real_kos)
+                await go_to_zero(sim_kos=None, real_kos=real_kos)
         elif not args.deploy:
             logger.info("Running in simulation mode only")
             async with KOS(ip=args.host, port=args.port) as sim_kos:
-                await squat(sim_kos=sim_kos, real_kos=None)
+                await go_to_zero(sim_kos=sim_kos, real_kos=None)
         else:
             logger.info(f"Running in deploy mode with real robot at {args.real_host} and simulation at {args.host}")
             async with KOS(ip=args.host, port=args.port) as sim_kos, \
                        KOS(ip=args.real_host, port=args.port) as real_kos:
-                await squat(sim_kos=sim_kos, real_kos=real_kos)
+                await go_to_zero(sim_kos=sim_kos, real_kos=real_kos)
     except KeyboardInterrupt:
         logger.warning("Keyboard interrupt received - shutting down")
     except Exception as e:
@@ -167,5 +131,3 @@ async def main() -> None:
 if __name__ == "__main__":
     # Run the main function
     asyncio.run(main())
-
-

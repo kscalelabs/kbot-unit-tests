@@ -27,30 +27,57 @@ class Actuator:
     max_torque: float
     flip_sign: bool = False
 
+#* FOR SIM
+# ACTUATOR_LIST = {
+#     # actuator id, nn id, kp, kd, max_torque, flip_sign
+#     11: Actuator(11, 1, 150.0, 8.0, 60.0, True),  # left_shoulder_pitch_03
+#     12: Actuator(12, 5, 150.0, 8.0, 60.0, False),  # left_shoulder_roll_03
+#     13: Actuator(13, 9, 50.0, 5.0, 17.0, False),  # left_shoulder_yaw_02
+#     14: Actuator(14, 13, 50.0, 5.0, 17.0, False),  # left_elbow_02
+#     15: Actuator(15, 17, 20.0, 2.0, 17.0, False),  # left_wrist_02
+#     21: Actuator(21, 3, 150.0, 8.0, 60.0, False),  # right_shoulder_pitch_03
+#     22: Actuator(22, 7, 150.0, 8.0, 60.0, True),  # right_shoulder_roll_03
+#     23: Actuator(23, 11, 50.0, 2.0, 17.0, True),  # right_shoulder_yaw_02
+#     24: Actuator(24, 15, 50.0, 5.0, 17.0, True),  # right_elbow_02
+#     25: Actuator(25, 19, 20.0, 2.0, 17.0, False),  # right_wrist_02
+#     31: Actuator(31, 0, 100.0, 6.1504, 80.0, True),  # left_hip_pitch_04 (RS04_Pitch)
+#     32: Actuator(32, 4, 50.0, 11.152, 60.0, False),  # left_hip_roll_03 (RS03_Roll)
+#     33: Actuator(33, 8, 50.0, 11.152, 60.0, False),  # left_hip_yaw_03 (RS03_Yaw)
+#     34: Actuator(34, 12, 100.0, 6.1504, 80.0, True),  # left_knee_04 (RS04_Knee)
+#     35: Actuator(35, 16, 20.0, 0.6, 17.0, False),  # left_ankle_02 (RS02)
+#     41: Actuator(41, 2, 100, 7.0, 80.0, False),  # right_hip_pitch_04 (RS04_Pitch)
+#     42: Actuator(42, 6, 50.0, 11.152, 60.0, True),  # right_hip_roll_03 (RS03_Roll)
+#     43: Actuator(43, 10, 50.0, 11.152, 60.0, True),  # right_hip_yaw_03 (RS03_Yaw)
+#     44: Actuator(44, 14, 100.0, 6.1504, 80.0, False),  # right_knee_04 (RS04_Knee)
+#     45: Actuator(45, 18, 20.0, 0.6, 17.0, True),  # right_ankle_02 (RS02)
+# }
 
-ACTUATOR_LIST = [
+
+#* FOR REAL
+ACTUATOR_LIST = {
     # actuator id, nn id, kp, kd, max_torque, flip_sign
-    Actuator(11, 1, 150.0, 8.0, 60.0, True),  # left_shoulder_pitch_03
-    Actuator(12, 5, 150.0, 8.0, 60.0, False),  # left_shoulder_roll_03
-    Actuator(13, 9, 50.0, 5.0, 17.0, False),  # left_shoulder_yaw_02
-    Actuator(14, 13, 50.0, 5.0, 17.0, False),  # left_elbow_02
-    Actuator(15, 17, 20.0, 2.0, 17.0, False),  # left_wrist_02
-    Actuator(21, 3, 150.0, 8.0, 60.0, False),  # right_shoulder_pitch_03
-    Actuator(22, 7, 150.0, 8.0, 60.0, True),  # right_shoulder_roll_03
-    Actuator(23, 11, 50.0, 2.0, 17.0, True),  # right_shoulder_yaw_02
-    Actuator(24, 15, 50.0, 5.0, 17.0, True),  # right_elbow_02
-    Actuator(25, 19, 20.0, 2.0, 17.0, False),  # right_wrist_02
-    Actuator(31, 0, 100.0, 6.1504, 80.0, True),  # left_hip_pitch_04 (RS04_Pitch)
-    Actuator(32, 4, 50.0, 11.152, 60.0, False),  # left_hip_roll_03 (RS03_Roll) #* DONE
-    Actuator(33, 8, 50.0, 11.152, 60.0, False),  # left_hip_yaw_03 (RS03_Yaw)
-    Actuator(34, 12, 100.0, 6.1504, 80.0, True),  # left_knee_04 (RS04_Knee)
-    Actuator(35, 16, 20.0, 0.6, 17.0, False),  # left_ankle_02 (RS02)
-    Actuator(41, 2, 100, 7.0, 80.0, False),  # right_hip_pitch_04 (RS04_Pitch) #* DONE
-    Actuator(42, 6, 50.0, 11.152, 60.0, True),  # right_hip_roll_03 (RS03_Roll)
-    Actuator(43, 10, 50.0, 11.152, 60.0, True),  # right_hip_yaw_03 (RS03_Yaw)
-    Actuator(44, 14, 100.0, 6.1504, 80.0, False),  # right_knee_04 (RS04_Knee) #* DONE
-    Actuator(45, 18, 20.0, 0.6, 17.0, True),  # right_ankle_02 (RS02)
-]
+    11: Actuator(11, 1, 150.0, 8.0, 60.0, True),  # left_shoulder_pitch_03
+    12: Actuator(12, 5, 150.0, 8.0, 60.0, False),  # left_shoulder_roll_03
+    13: Actuator(13, 9, 50.0, 5.0, 17.0, False),  # left_shoulder_yaw_02
+    14: Actuator(14, 13, 50.0, 5.0, 17.0, False),  # left_elbow_02
+    15: Actuator(15, 17, 20.0, 2.0, 17.0, False),  # left_wrist_02
+    21: Actuator(21, 3, 150.0, 8.0, 60.0, False),  # right_shoulder_pitch_03
+    22: Actuator(22, 7, 150.0, 8.0, 60.0, True),  # right_shoulder_roll_03
+    23: Actuator(23, 11, 50.0, 2.0, 17.0, True),  # right_shoulder_yaw_02
+    24: Actuator(24, 15, 50.0, 5.0, 17.0, True),  # right_elbow_02
+    25: Actuator(25, 19, 20.0, 2.0, 17.0, False),  # right_wrist_02
+    31: Actuator(31, 0, 100.0, 6.1504, 80.0, True),  # left_hip_pitch_04 (RS04_Pitch)
+    32: Actuator(32, 4, 50.0, 11.152, 60.0, True),  # left_hip_roll_03 (RS03_Roll)
+    33: Actuator(33, 8, 50.0, 11.152, 60.0, False),  # left_hip_yaw_03 (RS03_Yaw)
+    34: Actuator(34, 12, 200.0, 6.1504, 80.0, True),  # left_knee_04 (RS04_Knee)
+    35: Actuator(35, 16, 50.0, 5, 17.0, True),  # left_ankle_02 (RS02)
+    41: Actuator(41, 2, 100, 7.0, 80.0, False),  # right_hip_pitch_04 (RS04_Pitch)
+    42: Actuator(42, 6, 50.0, 11.152, 60.0, False),  # right_hip_roll_03 (RS03_Roll)
+    43: Actuator(43, 10, 50.0, 11.152, 60.0, True),  # right_hip_yaw_03 (RS03_Yaw)
+    44: Actuator(44, 14, 200.0, 6.1504, 80.0, False),  # right_knee_04 (RS04_Knee)
+    45: Actuator(45, 18, 50.0, 5, 17.0, False),  # right_ankle_02 (RS02)
+}
+
 
 
 async def move_actuators_with_trajectory(sim_kos: KOS, actuator_ids: list[int], target_angles: list[float], 
@@ -68,7 +95,7 @@ async def move_actuators_with_trajectory(sim_kos: KOS, actuator_ids: list[int], 
         raise ValueError("Number of actuator IDs must match number of target angles")
     
     # Create a mapping of actuator_id to flip_sign from ACTUATOR_LIST
-    flip_sign_map = {actuator.actuator_id: actuator.flip_sign for actuator in ACTUATOR_LIST}
+    flip_sign_map = {actuator_id: ACTUATOR_LIST[actuator_id].flip_sign for actuator_id in actuator_ids if actuator_id in ACTUATOR_LIST}
     
     # Apply sign flipping to target angles if needed
     adjusted_target_angles = []
@@ -80,11 +107,13 @@ async def move_actuators_with_trajectory(sim_kos: KOS, actuator_ids: list[int], 
             adjusted_target_angles.append(target_angle)  # Keep original
     
     # Get the current positions of all actuators
-    state_response = await sim_kos.actuator.get_actuators_state(actuator_ids)
+    # Use sim_kos if available, otherwise use real_kos
+    kos_to_use = sim_kos if sim_kos is not None else real_kos
+    if kos_to_use is None:
+        raise ValueError("Both sim_kos and real_kos cannot be None")
+        
+    state_response = await kos_to_use.actuator.get_actuators_state(actuator_ids)
     current_angles = [state.position for state in state_response.states]
-    
-    # for i, (actuator_id, current_angle, target_angle) in enumerate(zip(actuator_ids, current_angles, adjusted_target_angles)):
-        # logger.info(f"Current position of actuator {actuator_id}: {current_angle} degrees, target: {target_angle} degrees")
     
     # Generate trajectories for each actuator
     trajectories = []
@@ -140,7 +169,9 @@ async def move_actuators_with_trajectory(sim_kos: KOS, actuator_ids: list[int], 
                 })
         
         # Send commands to sim and optionally real robot
-        command_tasks = [sim_kos.actuator.command_actuators(command)]
+        command_tasks = []
+        if sim_kos:
+            command_tasks.append(sim_kos.actuator.command_actuators(command))
         if real_kos:
             command_tasks.append(real_kos.actuator.command_actuators(command))
         
@@ -161,79 +192,105 @@ async def move_actuators_with_trajectory(sim_kos: KOS, actuator_ids: list[int], 
         for actuator_id, target_angle in zip(actuator_ids, adjusted_target_angles)
     ]
     
-    command_tasks = [sim_kos.actuator.command_actuators(final_command)]
+    command_tasks = []
+    if sim_kos:
+        command_tasks.append(sim_kos.actuator.command_actuators(final_command))
     if real_kos:
         command_tasks.append(real_kos.actuator.command_actuators(final_command))
     
     await asyncio.gather(*command_tasks)
     
     # Get the final positions to verify
-    state_response = await sim_kos.actuator.get_actuators_state(actuator_ids)
+    state_response = await kos_to_use.actuator.get_actuators_state(actuator_ids)
     for i, (actuator_id, state) in enumerate(zip(actuator_ids, state_response.states)):
         logger.info(f"Final position of actuator {actuator_id}: {state.position} degrees")
 
 
-async def setup_actuator(sim_kos: KOS, actuator_id: int, kp: float, kd: float, 
-                        max_torque: float = None, real_kos: KOS = None) -> None:
+async def setup_actuators(sim_kos: KOS, actuators: list[Actuator], real_kos: KOS = None) -> None:
     """
-    Setup an actuator by configuring its gains and enabling it.
+    Setup multiple actuators at once by configuring their gains and enabling them.
     
     Args:
         sim_kos: KOS simulation instance
-        actuator_id: ID of the actuator to setup
-        kp: Position gain
-        kd: Velocity gain
-        max_torque: Maximum torque (only used for real robot)
+        actuators: List of Actuator objects to setup
         real_kos: Optional KOS real robot instance
     """
-    logger.info(f"Configuring actuator {actuator_id}...")
+    logger.info(f"Configuring {len(actuators)} actuators...")
     
-    # First disable the actuator
-    await sim_kos.actuator.configure_actuator(actuator_id=actuator_id, torque_enabled=False)
+    # First disable all actuators
+    disable_commands = []
+    if sim_kos:
+        for actuator in actuators:
+            disable_commands.append(
+                sim_kos.actuator.configure_actuator(actuator_id=actuator.actuator_id, torque_enabled=False)
+            )
+    
     if real_kos:
-        await real_kos.actuator.configure_actuator(actuator_id=actuator_id, torque_enabled=False)
+        for actuator in actuators:
+            print("CONFIGURING REAL ACTUATOR")
+            disable_commands.append(
+                real_kos.actuator.configure_actuator(actuator_id=actuator.actuator_id, torque_enabled=False)
+            )
     
+    if not disable_commands:
+        raise ValueError("Both sim_kos and real_kos cannot be None")
+        
+    await asyncio.gather(*disable_commands)
     await asyncio.sleep(1)
     
-    # Configure the actuator with appropriate gains
-    config_commands = [
-        sim_kos.actuator.configure_actuator(
-            actuator_id=actuator_id,
-            kp=kp,
-            kd=kd,
-            torque_enabled=True,
-        )
-    ]
-    if real_kos:
-        config_commands.append(
-            real_kos.actuator.configure_actuator(
-                actuator_id=actuator_id,
-                kp=kp,
-                kd=kd,
-                max_torque=max_torque if max_torque else 80.0,
-                torque_enabled=True,
+    # Configure all actuators with appropriate gains
+    config_commands = []
+    if sim_kos:
+        for actuator in actuators:
+            config_commands.append(
+                sim_kos.actuator.configure_actuator(
+                    actuator_id=actuator.actuator_id,
+                    kp=actuator.kp,
+                    kd=actuator.kd,
+                    torque_enabled=True,
+                )
             )
-        )
+    
+    if real_kos:
+        for actuator in actuators:
+            config_commands.append(
+                real_kos.actuator.configure_actuator(
+                    actuator_id=actuator.actuator_id,
+                    kp=actuator.kp,
+                    kd=actuator.kd,
+                    max_torque=actuator.max_torque,
+                    torque_enabled=True,
+                )
+            )
+    
     await asyncio.gather(*config_commands)
 
-async def disable_actuator(sim_kos: KOS, actuator_id: int, real_kos: KOS = None) -> None:
+async def disable_actuators(sim_kos: KOS, actuator_ids: list[int], real_kos: KOS = None) -> None:
     """
-    Disable an actuator.
+    Disable multiple actuators at once.
     
     Args:
         sim_kos: KOS simulation instance
-        actuator_id: ID of the actuator to disable
+        actuator_ids: List of actuator IDs to disable
         real_kos: Optional KOS real robot instance
     """
-    logger.info(f"Disabling actuator {actuator_id}...")
-    disable_commands = [
-        sim_kos.actuator.configure_actuator(actuator_id=actuator_id, torque_enabled=False)
-    ]
+    logger.info(f"Disabling {len(actuator_ids)} actuators...")
+    
+    disable_commands = []
+    if sim_kos:
+        for actuator_id in actuator_ids:
+            disable_commands.append(
+                sim_kos.actuator.configure_actuator(actuator_id=actuator_id, torque_enabled=False)
+            )
+    
     if real_kos:
-        disable_commands.append(
-            real_kos.actuator.configure_actuator(actuator_id=actuator_id, torque_enabled=False)
-        )
-    await asyncio.gather(*disable_commands)
+        for actuator_id in actuator_ids:
+            disable_commands.append(
+                real_kos.actuator.configure_actuator(actuator_id=actuator_id, torque_enabled=False)
+            )
+    
+    if disable_commands:  # Only try to gather if there are commands to execute
+        await asyncio.gather(*disable_commands)
 
 async def demo_multi_actuator_movement(sim_kos: KOS, real_kos: KOS = None) -> None:
     """
@@ -246,16 +303,11 @@ async def demo_multi_actuator_movement(sim_kos: KOS, real_kos: KOS = None) -> No
     right_knee_id = 44  # right_knee_04 (RS04_Knee)
     left_knee_id = 34   # left_knee_04 (LS04_Knee)
     
-    # Setup both knee actuators
-    for actuator_id in [right_knee_id, left_knee_id]:
-        await setup_actuator(
-            sim_kos=sim_kos,
-            actuator_id=actuator_id,
-            kp=100.0,
-            kd=6.1504,
-            max_torque=80.0,
-            real_kos=real_kos
-        )
+    # Get the actuator objects for the knees
+    knee_actuators = [ACTUATOR_LIST[right_knee_id], ACTUATOR_LIST[left_knee_id]]
+    
+    # Setup both knee actuators at once
+    await setup_actuators(sim_kos, knee_actuators, real_kos)
     
     # Move both knees to -30 degrees simultaneously
     await move_actuators_with_trajectory(
@@ -287,9 +339,8 @@ async def demo_multi_actuator_movement(sim_kos: KOS, real_kos: KOS = None) -> No
         real_kos=real_kos
     )
     
-    # Disable the actuators
-    for actuator_id in [right_knee_id, left_knee_id]:
-        await disable_actuator(sim_kos, actuator_id, real_kos)
+    # Disable all actuators at once
+    await disable_actuators(sim_kos, [right_knee_id, left_knee_id], real_kos)
 
 async def main() -> None:
     """Runs the main simulation loop."""
